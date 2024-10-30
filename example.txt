@@ -1,0 +1,61 @@
+Example Interaction
+Here’s a quick example of a complete interaction:
+
+mathematica
+Copy code
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Substring Slice
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 1
+Enter string to insert: Hello
+Enter index to insert at: 0
+
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Substring Slice
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 2
+Enter string to concatenate: World
+
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Substring Slice
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 6
+Current Rope: HelloWorld
+
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Substring Slice
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 5
+Enter starting index for deletion: 5
+Enter length of substring to delete: 5
+
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Substring Slice
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 6
+Current Rope: Hello
