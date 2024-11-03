@@ -4,8 +4,8 @@
 
 // Node structure for Rope
 typedef struct RopeNode {
-    char *str;  // Pointer to the string
-    int weight; // Weight of the node (length of left child) 
+    char *str;  // Pointer to the string (leaf nodes only)
+    int weight; // Weight of the node (length of left child)
     struct RopeNode *left;   // Left child
     struct RopeNode *right;  // Right child
 } RopeNode;
@@ -13,19 +13,19 @@ typedef struct RopeNode {
 // Function prototypes
 RopeNode* createRopeNode(const char *str);
 void freeRope(RopeNode *node);
-RopeNode* concatRopes(RopeNode *left, RopeNode *right); // O(log n)
-void printRope(RopeNode *node); // O(n)
-RopeNode* insertRope(RopeNode *root, int idx, const char *str); // O(log n)
-RopeNode* deleteRope(RopeNode *root, int start, int len); // O(log n)
-void splitRope(RopeNode *node, int idx, RopeNode **leftPart, RopeNode **rightPart); // O(log n)
-RopeNode* joinMultipleRopes(RopeNode **ropes, int count); // O(log n)
+RopeNode* concatRopes(RopeNode *left, RopeNode *right);
+void printRope(RopeNode *node);
+RopeNode* insertRope(RopeNode *root, int idx, const char *str);
+RopeNode* appendRope(RopeNode *rope, const char *str);
+RopeNode* deleteRope(RopeNode *rope, int idx, int length);
+RopeNode* concatenateRopes(RopeNode *rope1, RopeNode *rope2); // Concatenation function
 
 // Create a new RopeNode
 RopeNode* createRopeNode(const char *str) {
     RopeNode *node = (RopeNode*)malloc(sizeof(RopeNode));
     node->str = strdup(str);
     node->left = node->right = NULL;
-    node->weight = strlen(str); // Set weight to length of the string
+    node->weight = strlen(str);
     return node;
 }
 
@@ -41,10 +41,11 @@ void freeRope(RopeNode *node) {
 
 // Concatenate two ropes
 RopeNode* concatRopes(RopeNode *left, RopeNode *right) {
-    RopeNode *node = createRopeNode(""); // Create a new node
+    RopeNode *node = (RopeNode*)malloc(sizeof(RopeNode));
     node->left = left;
     node->right = right;
-    node->weight = left ? left->weight : 0; // Set weight (O(log n))
+    node->weight = (left ? left->weight : 0) + (right ? right->weight : 0);
+    node->str = NULL; // Do not store the string here
     return node;
 }
 
@@ -52,80 +53,148 @@ RopeNode* concatRopes(RopeNode *left, RopeNode *right) {
 void printRope(RopeNode *node) {
     if (node) {
         printRope(node->left);
-        printf("%s", node->str);
+        if (node->str) { // Only print strings at leaf nodes
+            printf("%s", node->str);
+        }
         printRope(node->right);
     }
 }
 
-// Split the rope at a given index
-void splitRope(RopeNode *node, int idx, RopeNode **leftPart, RopeNode **rightPart) {
-    if (!node) {
-        *leftPart = NULL;
-        *rightPart = NULL;
-        return;
+// Insert a string at a specific index
+RopeNode* insertRope(RopeNode *root, int idx, const char *str) {
+    if (idx < 0 || (root && idx > root->weight)) {
+        printf("Invalid index\n");
+        return root;
     }
 
-    if (idx < 0 || idx > node->weight) {
-        *leftPart = NULL;
-        *rightPart = NULL; // Invalid index
-        return;
+    RopeNode *newNode = createRopeNode(str);
+    if (!root) {
+        return newNode; // If the rope is empty, return the new node
     }
 
-    // If the split index is in the left child
-    if (idx < (node->left ? node->left->weight : 0)) {
-        splitRope(node->left, idx, leftPart, rightPart);
-        RopeNode *newRight = concatRopes(*rightPart, node->right);
-        *rightPart = newRight; // Update right part after split
+    // Split the rope into two parts: left and right
+    RopeNode *leftPart = NULL;
+    RopeNode *rightPart = NULL;
+
+    // Traverse to split at the desired index
+    int totalWeight = root->weight;
+
+    if (idx <= totalWeight) {
+        // If the index is in the left part
+        leftPart = root->left;
+        rightPart = root->right;
     } else {
-        splitRope(node->right, idx - (node->left ? node->left->weight : 0), leftPart, rightPart);
-        RopeNode *newLeft = concatRopes(node->left, *leftPart);
-        *leftPart = newLeft; // Update left part after split
+        // If the index is in the right part
+        leftPart = root;
+        rightPart = NULL;
     }
+
+    // Concatenate the left part, new node, and right part
+    return concatRopes(leftPart, concatRopes(newNode, rightPart));
 }
 
-// Insert a string into the rope at a given index
-RopeNode* insertRope(RopeNode *root, int idx, const char *str) {
+// Append a string to the end of the rope
+RopeNode* appendRope(RopeNode *rope, const char *str) {
     RopeNode *newNode = createRopeNode(str);
-    RopeNode *leftPart, *rightPart;
-    splitRope(root, idx, &leftPart, &rightPart); // Split the rope
-    return concatRopes(concatRopes(leftPart, newNode), rightPart); // Concatenate
+    return concatRopes(rope, newNode); // Concatenate the existing rope with the new node
 }
 
 // Delete a substring from the rope
-RopeNode* deleteRope(RopeNode *root, int start, int len) {
-    RopeNode *leftPart, *middlePart, *rightPart;
-    splitRope(root, start, &leftPart, &middlePart); // Split before deletion
-    splitRope(middlePart, len, &middlePart, &rightPart); // Split at length
-    freeRope(middlePart); // Free the deleted part
-    return concatRopes(leftPart, rightPart); // Return the remaining rope
+RopeNode* deleteRope(RopeNode *rope, int idx, int length) {
+    if (!rope || idx < 0 || length <= 0) {
+        return rope; // Invalid input
+    }
+
+    // Calculate the total length of the rope
+    int totalLength = rope->weight;
+
+    if (idx >= totalLength) {
+        return rope; // Nothing to delete
+    }
+
+    // Adjust length if it exceeds the total length
+    if (idx + length > totalLength) {
+        length = totalLength - idx; // Trim length
+    }
+
+    // Create left and right parts
+    RopeNode *leftPart = NULL;
+    RopeNode *rightPart = NULL;
+
+    // Calculate left part (up to idx)
+    int leftWeight = 0; // To track the weight of the left part
+    RopeNode *current = rope;
+
+    while (current) {
+        if (leftWeight + current->weight > idx) {
+            // Split logic: we need to add part of the current node
+            int splitIdx = idx - leftWeight; // Index to split in current node
+            // Create a new node for the left part with the substring
+            if (splitIdx > 0) {
+                leftPart = concatRopes(leftPart, createRopeNode(strndup(current->str, splitIdx)));
+            }
+            break; // Stop as we have created the left part
+        }
+        leftPart = concatRopes(leftPart, createRopeNode(strdup(current->str)));
+        leftWeight += current->weight;
+        current = current->right; // Move to the next node
+    }
+
+    // Calculate right part (from idx + length)
+    int rightWeight = idx + length; // Start from the end of the deletion
+    current = rope;
+
+    while (current) {
+        if (rightWeight <= leftWeight) {
+            // No need to create the right part if we're within the left
+            break;
+        }
+        // Skip the current node if we're before the deletion index
+        if (leftWeight + current->weight <= idx) {
+            leftWeight += current->weight;
+            current = current->right; // Move to next node
+            continue;
+        }
+
+        // If we reach here, we need to start adding to the right part
+        int startIdx = leftWeight; // Index at which we start adding to right part
+        if (rightWeight > startIdx) {
+            int splitIdx = rightWeight - startIdx; // How much to take from current node
+            if (splitIdx < current->weight) {
+                rightPart = concatRopes(rightPart, createRopeNode(strndup(current->str + splitIdx, current->weight - splitIdx)));
+            }
+        }
+        // We can move to the next node
+        leftWeight += current->weight;
+        current = current->right;
+    }
+
+    // Concatenate the left part and right part
+    RopeNode *newRope = concatRopes(leftPart, rightPart);
+
+    freeRope(rope); // Free the original rope
+    return newRope; // Return the modified rope
 }
 
-// Join multiple ropes into one
-RopeNode* joinMultipleRopes(RopeNode **ropes, int count) {
-    if (count == 0) return NULL;
-    
-    RopeNode *result = ropes[0]; // Start with the first rope
-    for (int i = 1; i < count; i++) {
-        result = concatRopes(result, ropes[i]); // Concatenate each rope
-    }
-    return result; // Return the joined rope
+// Concatenate two ropes
+RopeNode* concatenateRopes(RopeNode *rope1, RopeNode *rope2) {
+    return concatRopes(rope1, rope2);
 }
 
 // Main function to test Rope operations
 int main() {
     RopeNode *rope = NULL;
-    int choice, idx, len, count;
+    int choice;
     char inputStr[100];
     
     while (1) {
         printf("\nMenu:\n");
         printf("1. Insert\n");
-        printf("2. Concatenate\n");
-        printf("3. Join Multiple Ropes\n");
-        printf("4. Split\n");
-        printf("5. Delete\n");
-        printf("6. Print Rope\n");
-        printf("7. Exit\n");
+        printf("2. Append\n");
+        printf("3. Concatenate Ropes\n");
+        printf("4. Delete\n");
+        printf("5. Print Rope\n");
+        printf("6. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
         getchar(); // Clear newline character
@@ -134,74 +203,60 @@ int main() {
             case 1:
                 printf("Enter string to insert: ");
                 scanf("%[^\n]", inputStr);
-                printf("Enter index to insert at: ");
-                scanf("%d", &idx);
-                rope = insertRope(rope, idx, inputStr);
+                rope = insertRope(rope, 0, inputStr); // Simple insertion as append
                 printf("After insertion: ");
                 printRope(rope);
                 break;
 
             case 2:
-                printf("Enter string to concatenate: ");
+                printf("Enter string to append: ");
                 scanf("%[^\n]", inputStr);
-                rope = concatRopes(rope, createRopeNode(inputStr));
-                printf("After concatenation: ");
+                rope = appendRope(rope, inputStr);
+                printf("After appending: ");
                 printRope(rope);
                 break;
 
             case 3:
-                printf("Enter number of ropes to join: ");
-                scanf("%d", &count);
-                RopeNode **ropes = malloc(count * sizeof(RopeNode*));
-                for (int i = 0; i < count; i++) {
-                    printf("Enter string for rope %d: ", i + 1);
-                    scanf("%s", inputStr);
-                    ropes[i] = createRopeNode(inputStr);
+                {
+                    printf("Enter the first rope string: ");
+                    scanf("%[^\n]", inputStr);
+                    RopeNode *rope1 = createRopeNode(inputStr);
+                    
+                    printf("Enter the second rope string: ");
+                    scanf("%[^\n]", inputStr);
+                    RopeNode *rope2 = createRopeNode(inputStr);
+                    
+                    rope = concatenateRopes(rope1, rope2);
+                    printf("After concatenation: ");
+                    printRope(rope);
+                    break;
                 }
-                rope = joinMultipleRopes(ropes, count);
-                free(ropes); // Free the temporary ropes array
-                printf("After joining multiple ropes: ");
-                printRope(rope);
-                break;
 
             case 4:
-                printf("Enter index to split at: ");
-                scanf("%d", &idx);
-                RopeNode *leftPart, *rightPart;
-                splitRope(rope, idx, &leftPart, &rightPart); // Split the rope
-                printf("Left Part: ");
-                printRope(leftPart);
-                printf("\nRight Part: ");
-                printRope(rightPart);
-                freeRope(leftPart); // Free the left part
-                freeRope(rightPart); // Free the right part
-                break;
+                {
+                    int idx, length;
+                    printf("Enter index to delete from: ");
+                    scanf("%d", &idx);
+                    printf("Enter length to delete: ");
+                    scanf("%d", &length);
+                    rope = deleteRope(rope, idx, length);
+                    printf("After deletion: ");
+                    printRope(rope);
+                    break;
+                }
 
             case 5:
-                printf("Enter starting index for deletion: ");
-                scanf("%d", &idx);
-                printf("Enter length of substring to delete: ");
-                scanf("%d", &len);
-                rope = deleteRope(rope, idx, len);
-                printf("After deletion: ");
-                printRope(rope);
-                break;
-
-            case 6:
                 printf("Current Rope: ");
                 printRope(rope);
                 break;
 
-            case 7:
+            case 6:
                 freeRope(rope);
                 exit(0);
-                break;
 
             default:
-                printf("Invalid choice!\n");
-                break;
+                printf("Invalid choice\n");
         }
     }
-
     return 0;
 }
