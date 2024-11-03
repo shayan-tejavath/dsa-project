@@ -1,13 +1,8 @@
-Example Interaction
-Here’s a quick example of a complete interaction:
-
-mathematica
-Copy code
 Menu:
 1. Insert
 2. Concatenate
 3. Join Multiple Ropes
-4. Substring Slice
+4. Split
 5. Delete
 6. Print Rope
 7. Exit
@@ -19,7 +14,7 @@ Menu:
 1. Insert
 2. Concatenate
 3. Join Multiple Ropes
-4. Substring Slice
+4. Split
 5. Delete
 6. Print Rope
 7. Exit
@@ -30,7 +25,7 @@ Menu:
 1. Insert
 2. Concatenate
 3. Join Multiple Ropes
-4. Substring Slice
+4. Split
 5. Delete
 6. Print Rope
 7. Exit
@@ -41,7 +36,45 @@ Menu:
 1. Insert
 2. Concatenate
 3. Join Multiple Ropes
-4. Substring Slice
+4. Split
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 3
+Enter number of ropes to join: 2
+Enter string for rope 1: Good
+Enter string for rope 2: Morning
+
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Split
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 6
+Current Rope: HelloWorldGoodMorning
+
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Split
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 4
+Enter index to split at: 11
+
+Left Part: HelloWorld
+Right Part: GoodMorning
+
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Split
 5. Delete
 6. Print Rope
 7. Exit
@@ -53,9 +86,19 @@ Menu:
 1. Insert
 2. Concatenate
 3. Join Multiple Ropes
-4. Substring Slice
+4. Split
 5. Delete
 6. Print Rope
 7. Exit
 Enter your choice: 6
-Current Rope: Hello
+Current Rope: HelloMorning
+
+Menu:
+1. Insert
+2. Concatenate
+3. Join Multiple Ropes
+4. Split
+5. Delete
+6. Print Rope
+7. Exit
+Enter your choice: 7
