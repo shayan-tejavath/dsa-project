@@ -203,7 +203,7 @@ int main() {
             case 1:
                 printf("Enter string to insert: ");
                 scanf("%[^\n]", inputStr);
-                rope = insertRope(rope, 0, inputStr); // Simple insertion as append
+                rope = insertRope(rope, 0, inputStr); // Simple insertion at the beginning
                 printf("After insertion: ");
                 printRope(rope);
                 break;
@@ -218,32 +218,32 @@ int main() {
 
             case 3:
                 {
-                    printf("Enter the first rope string: ");
+                    printf("Enter the  rope string: ");
                     scanf("%[^\n]", inputStr);
                     RopeNode *rope1 = createRopeNode(inputStr);
                     
-                    printf("Enter the second rope string: ");
-                    scanf("%[^\n]", inputStr);
-                    RopeNode *rope2 = createRopeNode(inputStr);
+                 
                     
-                    rope = concatenateRopes(rope1, rope2);
+                    // Concatenate the current rope with the new ropes
+                    rope = (concatenateRopes(rope, rope1));
                     printf("After concatenation: ");
                     printRope(rope);
-                    break;
+                    freeRope(rope1);
+                    
                 }
+                break;
 
             case 4:
-                {
-                    int idx, length;
-                    printf("Enter index to delete from: ");
-                    scanf("%d", &idx);
-                    printf("Enter length to delete: ");
-                    scanf("%d", &length);
-                    rope = deleteRope(rope, idx, length);
-                    printf("After deletion: ");
-                    printRope(rope);
-                    break;
-                }
+                printf("Enter index to delete from: ");
+                int idx, length;
+                scanf("%d", &idx);
+                printf("Enter length to delete: ");
+                scanf("%d", &length);
+                 printRope(rope);
+                rope = deleteRope(rope, idx, length);
+                printf("After deletion: ");
+                printRope(rope);
+                break;
 
             case 5:
                 printf("Current Rope: ");
@@ -253,9 +253,6 @@ int main() {
             case 6:
                 freeRope(rope);
                 exit(0);
-
-            default:
-                printf("Invalid choice\n");
         }
     }
     return 0;
